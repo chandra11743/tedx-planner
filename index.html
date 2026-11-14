@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>TEDxNTU 2027 Planner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23E62B1E'/%3E%3Ctext x='32' y='42' font-size='28' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3ETx%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#E62B1E;--ink:#1a1a1a;--mute:#6b6b6b;--line:#e6e6e6;--bg:#fafafa;
+--c-chair:#E6E6E6;--c-spk:#5FB69A;--c-hr:#8ED8F2;--c-part:#B3CBF6;--c-mkt:#D9F08F;--c-trs:#CDB9EA;--c-com:#F4AA63;--c-ops:#FFF3A3}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+header{display:flex;align-items:center;gap:14px;padding:10px 18px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:700}header h1 b{color:var(--red)}
+nav{display:flex;gap:2px;margin-left:auto}nav button{border:0;background:transparent;padding:8px 11px;border-radius:8px;font-weight:600;color:var(--mute);cursor:pointer;font:inherit}
+nav button.on{background:#f1f1f1;color:var(--ink)}
+.me{font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px}.dot{width:8px;height:8px;border-radius:50%;background:#bbb;display:inline-block}.dot.ok{background:#1d9a5a}.dot.err{background:#e6a100}
+.btn{border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+.btn.p{background:var(--red);color:#fff;border-color:var(--red)}.btn.s{padding:4px 8px;font-size:12px}.btn:disabled{opacity:.5;cursor:not-allowed}
+main{padding:16px 18px;max-width:1600px;margin:0 auto}
+.note{padding:10px 14px;border-radius:8px;background:#fff6e5;border:1px solid #ffe2b3;margin-bottom:12px;font-size:13px}.note.err{background:#fdecea;border-color:#f5c2bd}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+select,input,textarea{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--mute)}.legend span{display:inline-flex;align-items:center;gap:5px}.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tl-wrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 0}
+.tl{position:relative;height:620px}.axis{position:absolute;left:0;right:0;top:50%;height:2px;background:#333}
+.month{position:absolute;top:50%;margin-top:8px;font-weight:700;font-size:13px;border-left:2px solid #333;padding-left:6px;height:16px}
+.today{position:absolute;top:0;bottom:0;width:2px;background:var(--red);opacity:.6}
+.tk{position:absolute;width:130px;padding:6px 8px;border-radius:8px;font-size:11.5px;line-height:1.3;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.06)}
+.tk:hover{outline:2px solid var(--red)}.tk small{display:block;color:#333;opacity:.75;margin-top:3px}.tk.done{opacity:.55;text-decoration:line-through}.tk.doing{outline:2px dashed #333}
+.ln{position:absolute;width:1px;background:#999}
+.board{display:grid;grid-template-columns:repeat(8,minmax(170px,1fr));gap:10px;overflow-x:auto}
+.col{background:#fff;border:1px solid var(--line);border-radius:12px;min-height:200px}.col h3{margin:0;padding:10px;border-radius:12px 12px 0 0;font-size:13px}.col h3 small{display:block;font-weight:400;font-size:11px;color:#333;opacity:.8}
+.card{margin:8px;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid var(--line);cursor:pointer;font-size:12.5px}.card:hover{border-color:var(--red)}.card .d{color:var(--mute);font-size:11px;margin-top:3px;display:flex;justify-content:space-between;gap:6px}
+.chip{display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;background:#eee;font-weight:600}.chip.done{background:#d9f3e4;color:#126b3e}.chip.doing{background:#fff1c7;color:#7a5200}.chip.todo{background:#eee;color:#555}.chip.rev{background:#fdecea;color:#b00}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;z-index:10}.ov.on{display:block}
+.dr{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:#fff;z-index:11;transform:translateX(100%);transition:.2s;overflow:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.1)}
+.dr.on{transform:none}.dr h2{margin:0 0 4px;font-size:18px}label{display:block;font-size:12px;color:var(--mute);margin:12px 0 4px;font-weight:600}
+.dr input,.dr select,.dr textarea{width:100%}.row{display:flex;gap:8px;align-items:center}
+.st{display:flex;gap:6px}.st button{flex:1}.st button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.log{border-top:1px solid var(--line);margin-top:16px;padding-top:10px}.log div{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line)}.log time{color:var(--mute);font-size:11px;display:block}
+.act{background:#fff;border:1px solid var(--line);border-radius:12px}.act>div{padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;display:flex;gap:10px;align-items:baseline}.act time{color:var(--mute);font-size:11px;min-width:110px}
+.av{width:26px;height:26px;border-radius:50%;background:#333;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.pc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.pc .n{font-weight:700;margin:6px 0 2px}.pc .s{font-size:12px;color:var(--mute)}
+.bar{height:6px;background:#eee;border-radius:3px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;background:#126b3e}
+.empty{color:var(--mute);padding:30px;text-align:center}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}.panel h3{margin:0 0 10px;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;color:var(--mute);text-transform:uppercase}
+code.k{font-family:ui-monospace,Menlo,monospace;background:#f3f3f3;padding:2px 6px;border-radius:6px;font-size:13px;letter-spacing:1px}
+.gate{max-width:520px;margin:40px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px}.gate h2{margin:0 0 6px}.gate p{color:var(--mute);margin:0 0 14px;font-size:13px}.gate input{width:100%}
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tabs button{flex:1}.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pick{position:relative}.pick ul{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--line);border-radius:8px;list-style:none;margin:2px 0 0;padding:4px;max-height:180px;overflow:auto;z-index:3;display:none}.pick ul.on{display:block}.pick li{padding:6px 8px;border-radius:6px;cursor:pointer}.pick li:hover{background:#f3f3f3}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;z-index:20;pointer-events:none}.toast.on{opacity:1}
+@media (max-width:700px){.board{grid-template-columns:repeat(8,220px)}nav{width:100%;overflow:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h1><b>TEDx</b>NTU 2027 Planner</h1>
+  <span class="me"><span class="dot" id="dot"></span><span id="meTxt">not connected</span></span>
+  <nav id="nav">
+    <button data-v="timeline" class="on">Timeline</button><button data-v="board">Teams</button><button data-v="activity">Activity</button><button data-v="people">People</button><button data-v="admin" id="navAdmin" hidden>Admin</button><button data-v="settings">⚙</button>
+  </nav>
+  <button class="btn p" id="newBtn" disabled>+ Task</button>
+</header>
+<main>
+  <div id="msg"></div>
+
+  <section id="v-gate" hidden>
+    <div class="gate">
+      <h2>Connect to the plan</h2>
+      <p>Everyone works on one shared copy. Changes sync every few seconds and every edit is recorded with the name of the person who made it.</p>
+      <div class="tabs"><button class="btn on" data-g="join">I have an access code</button><button class="btn" data-g="admin">I'm the admin</button></div>
+      <div id="gJoin">
+        <label>Plan link or join code</label><input id="gLink" placeholder="TEDX1-J-… (filled automatically if you opened a join link)">
+        <label>Access code</label><input id="gCode" placeholder="e.g. 7KQ2M9" style="letter-spacing:2px;text-transform:uppercase">
+        <label>Your name</label><input id="gName" placeholder="How your teammates know you">
+        <div class="row" style="margin-top:14px"><button class="btn p" id="gJoinBtn">Join</button></div>
+      </div>
+      <div id="gAdmin" hidden>
+        <label>Admin code</label><input id="gAdminCode" placeholder="TEDX1-A-…">
+        <label>Your name</label><input id="gAdminName" placeholder="Shown on your edits">
+        <div class="row" style="margin-top:14px"><button class="btn p" id="gAdminBtn">Connect as admin</button></div>
+        <p style="margin-top:14px">No admin code yet? Open <b>⚙</b> → <b>Set up a new plan</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="v-timeline" hidden>
+    <div class="toolbar">
+      <select id="fTeam"><option value="">All teams</option></select>
+      <select id="fStatus"><option value="">All statuses</option><option value="todo">To do</option><option value="doing">In progress</option><option value="done">Done</option></select>
+      <label class="row" style="margin:0;gap:4px"><input type="checkbox" id="fMine"> Mine only</label>
+      <div class="legend" id="legend" style="margin-left:auto"></div>
+    </div>
+    <div class="tl-wrap"><div class="tl" id="tl"></div></div>
+  </section>
+  <section id="v-board" hidden><div class="board" id="board"></div></section>
+  <section id="v-activity" hidden>
+    <div class="toolbar"><select id="aWho"><option value="">Everyone</option></select><input id="aQ" placeholder="Search activity…" style="flex:1;max-width:320px"></div>
+    <div class="act" id="act"></div>
+  </section>
+  <section id="v-people" hidden><div class="people" id="people"></div></section>
+
+  <section id="v-admin" hidden>
+    <div class="panel">
+      <h3>Access codes</h3>
+      <p style="margin:0 0 10px;color:var(--mute);font-size:13px">Make one code per person and name it after them. Send them the join link plus their code. You'll see who redeemed each code, from which device, and every change they make.</p>
+      <div class="row" style="flex-wrap:wrap"><input id="cLabel" placeholder="Person's name (e.g. Nandini – Speaker Curation)" style="flex:1;min-width:220px"><button class="btn p" id="cMake">Generate code</button><button class="btn" id="cLinkCopy">Copy join link</button></div>
+      <div id="cNew" style="margin-top:10px"></div>
+      <div style="overflow:auto;margin-top:12px"><table id="cTable"></table></div>
+    </div>
+    <div class="panel">
+      <h3>Starter tasks</h3>
+      <p style="margin:0 0 10px;color:var(--mute);font-size:13px">Load the 52 milestones from the 2026 plan (shifted to 2027 dates) as a starting point.</p>
+      <button class="btn" id="seedBtn">Load 2026 template</button>
+    </div>
+  </section>
+
+  <section id="v-settings" hidden>
+    <div class="panel" id="sConn"></div>
+    <div class="panel">
+      <h3>Set up a new plan (admin, one time)</h3>
+      <ol style="font-size:13px;line-height:1.6;color:#333;padding-left:18px">
+        <li>Go to <a href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> → <b>New project</b>. Delete the sample code and paste the contents of <code>Code.gs</code> from this app's GitHub folder. Save.</li>
+        <li>Choose the function <b>setup</b> in the toolbar and click <b>Run</b>. Approve the permissions. Open <b>Execution log</b> and copy the <b>ADMIN KEY</b>.</li>
+        <li><b>Deploy → New deployment → Web app</b>. Execute as <b>Me</b>, who has access <b>Anyone</b>. Deploy and copy the <b>Web app URL</b> (ends in <code>/exec</code>).</li>
+        <li>Paste both below to build your admin code. Keep it private: it has full control.</li>
+      </ol>
+      <label>Web app URL</label><input id="sUrl" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%">
+      <label>Admin key</label><input id="sKey" placeholder="from the execution log" style="width:100%">
+      <div class="row" style="margin-top:10px"><button class="btn p" id="sMake">Build admin code</button></div>
+      <div id="sOut" style="margin-top:10px"></div>
+    </div>
+  </section>
+</main>
+
+<div class="ov" id="ov"></div>
+<aside class="dr" id="dr">
+  <div class="row" style="justify-content:space-between"><h2 id="dTitle">Task</h2><button class="btn" id="dClose">✕</button></div>
+  <div class="me" id="dMeta"></div>
+  <label>Title</label><input id="dT">
+  <div class="row"><div style="flex:1"><label>Team</label><select id="dTeam"></select></div><div style="flex:1"><label>Date</label><input type="date" id="dDate" min="2027-01-01" max="2027-10-31"></div></div>
+  <label>Owner</label>
+  <div class="pick"><input id="dOwner" placeholder="Pick a teammate…" autocomplete="off"><ul id="dOwnerList"></ul></div>
+  <div class="row" style="margin-top:6px"><button class="btn" id="dMe">Assign to me</button><button class="btn" id="dNone">Unassign</button></div>
+  <label>Status</label>
+  <div class="st"><button class="btn" data-s="todo">To do</button><button class="btn" data-s="doing">In progress</button><button class="btn" data-s="done">Done</button></div>
+  <label>Notes</label><textarea id="dNotes" rows="3"></textarea>
+  <div class="row" style="margin-top:12px;justify-content:space-between"><button class="btn" id="dDel" style="color:#b00">Delete</button><button class="btn p" id="dSave">Save</button></div>
+  <label>Post an update</label>
+  <div class="row"><input id="dUpd" placeholder="What did you do?"><button class="btn" id="dPost">Post</button></div>
+  <div class="log" id="dLog"></div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script>
+const TEAMS={chair:"Chair & Co-chair",spk:"Speaker Curation",hr:"HR & Registrations",part:"Partnerships",mkt:"Marketing",trs:"Treasury",com:"Communications",ops:"Operations"};
+const COL={chair:"var(--c-chair)",spk:"var(--c-spk)",hr:"var(--c-hr)",part:"var(--c-part)",mkt:"var(--c-mkt)",trs:"var(--c-trs)",com:"var(--c-com)",ops:"var(--c-ops)"};
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct"];const PXD=11,T0=Date.UTC(2027,0,1);
+const CFG="tedxPlanner.cfg";const $=s=>document.querySelector(s);
+let cfg=null,me=null,S={rev:0,tasks:{},activity:[],members:[],codes:{}},cur=null,ownerSel="",busy=false,pollT=null,connState="off";
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dayX=d=>40+Math.round((Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10))-T0)/864e5)*PXD;
+const fmtD=d=>d?new Date(d+"T00:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"short",timeZone:"UTC"}):"";
+const fmtT=ts=>ts?new Date(ts).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+const ini=n=>(n||"?").split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+const okUrl=u=>/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,}\/exec$/.test(u||"");
+function msg(t,err){$("#msg").innerHTML=t?`<div class="note${err?" err":""}">${t}</div>`:""}
+let toastT;function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),2500)}
+const device=()=>{const u=navigator.userAgent;const os=/Android/.test(u)?"Android":/iPhone|iPad/.test(u)?"iOS":/Mac/.test(u)?"Mac":/Windows/.test(u)?"Windows":/Linux/.test(u)?"Linux":"device";const br=/Edg\//.test(u)?"Edge":/Chrome\//.test(u)?"Chrome":/Safari\//.test(u)?"Safari":/Firefox\//.test(u)?"Firefox":"browser";return os+" · "+br};
+
+/* codes */
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/=+$/,"");
+const dec=s=>{try{return JSON.parse(decodeURIComponent(escape(atob(s))))}catch{return null}};
+const adminCode=(u,k)=>"TEDX1-A-"+enc({u,k});const joinCode=u=>"TEDX1-J-"+enc({u});
+const joinLink=u=>location.origin+location.pathname+"#join="+enc({u});
+function parseAny(t){t=String(t||"").trim();let m=t.match(/TEDX1-([AJ])-([A-Za-z0-9+/=]+)/);if(m){const o=dec(m[2]);if(o&&okUrl(o.u))return{kind:m[1],u:o.u,k:o.k}}m=t.match(/#join=([A-Za-z0-9+/=]+)/);if(m){const o=dec(m[1]);if(o&&okUrl(o.u))return{kind:"J",u:o.u}}if(okUrl(t))return{kind:"J",u:t};return null}
+function loadCfg(){try{cfg=JSON.parse(localStorage.getItem(CFG)||"null")}catch{cfg=null}if(cfg&&!okUrl(cfg.u))cfg=null}
+function saveCfg(){try{localStorage.setItem(CFG,JSON.stringify(cfg))}catch{}}
+
+/* api */
+async function api(body){const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),25000);try{const r=await fetch(cfg.u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({name:cfg.name},cfg.adminKey?{adminKey:cfg.adminKey}:{token:cfg.token},body)),signal:ctl.signal});const j=await r.json();if(!j.ok){if(j.revoked||j.auth){disconnect("Your access was removed or the code was revoked.");}throw new Error(j.error||"request failed")}return j}finally{clearTimeout(t)}}
+function applyState(j){if(j.me)me=j.me;if(j.state){S=Object.assign(S,j.state);S.tasks=S.tasks||{}}setConn("ok");render();if(cur&&cur!=="new"){const t=S.tasks[cur];if(t)fillDrawer(t);else closeD()}}
+async function pull(force){if(!cfg||busy)return;try{const j=await api({action:"pull",since:force?null:S.rev});if(!j.same)applyState(j);else setConn("ok")}catch(e){setConn("err",e.message)}}
+async function push(ops){if(!cfg)return;busy=true;try{const j=await api({action:"push",ops});applyState(j);return true}catch(e){setConn("err",e.message);toast("Could not save: "+e.message);return false}finally{busy=false}}
+function setConn(s,err){connState=s;$("#dot").className="dot "+(s==="ok"?"ok":s==="err"?"err":"");if(me)$("#meTxt").textContent=me.name+(me.role==="admin"?" (admin)":"")+(s==="err"?" · offline, retrying":"");if(err&&s==="err")console.warn(err)}
+function startPolling(){clearInterval(pollT);pollT=setInterval(()=>{if(document.visibilityState==="visible")pull()},5000);window.addEventListener("focus",()=>pull());window.addEventListener("online",()=>pull())}
+function disconnect(reason){cfg=null;me=null;try{localStorage.removeItem(CFG)}catch{}clearInterval(pollT);$("#navAdmin").hidden=true;$("#newBtn").disabled=true;$("#meTxt").textContent="not connected";$("#dot").className="dot";show("gate");if(reason)msg(reason,true)}
+
+/* nav */
+const VIEWS=["gate","timeline","board","activity","people","admin","settings"];
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+function show(v){if(!cfg&&!["gate","settings"].includes(v))v="gate";document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));VIEWS.forEach(k=>$("#v-"+k).hidden=k!==v);render()}
+for(const k in TEAMS){$("#fTeam").add(new Option(TEAMS[k],k));$("#dTeam").add(new Option(TEAMS[k],k));$("#legend").insertAdjacentHTML("beforeend",`<span><i class="sw" style="background:${COL[k]}"></i>${TEAMS[k]}</span>`)}
+["#fTeam","#fStatus","#fMine","#aWho"].forEach(s=>$(s).onchange=render);$("#aQ").oninput=render;
+
+/* gate */
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));$("#gJoin").hidden=b.dataset.g!=="join";$("#gAdmin").hidden=b.dataset.g!=="admin"});
+$("#gJoinBtn").onclick=async()=>{const p=parseAny($("#gLink").value);if(!p){msg("Paste the plan link or join code first (it starts with TEDX1-J-).",true);return}const code=$("#gCode").value.trim().toUpperCase(),name=$("#gName").value.trim();if(!code||!name){msg("Enter your access code and your name.",true);return}
+  $("#gJoinBtn").disabled=true;try{const r=await fetch(p.u,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"join",code,name,device:device()})});const j=await r.json();if(!j.ok)throw new Error(j.error);cfg={u:p.u,token:j.token,name};saveCfg();me=j.member;connected();applyState(j);toast("Welcome, "+name)}catch(e){msg("Could not join: "+esc(e.message),true)}finally{$("#gJoinBtn").disabled=false}};
+$("#gAdminBtn").onclick=async()=>{const p=parseAny($("#gAdminCode").value);if(!p||p.kind!=="A"||!p.k){msg("That doesn't look like an admin code (TEDX1-A-…).",true);return}const name=$("#gAdminName").value.trim()||"Admin";cfg={u:p.u,adminKey:p.k,name};$("#gAdminBtn").disabled=true;try{const j=await api({action:"pull"});saveCfg();connected();applyState(j)}catch(e){cfg=null;msg("Could not connect: "+esc(e.message),true)}finally{$("#gAdminBtn").disabled=false}};
+function connected(){msg("");$("#navAdmin").hidden=!cfg.adminKey;$("#newBtn").disabled=false;show("timeline");startPolling()}
+
+/* settings */
+$("#sMake").onclick=()=>{const u=$("#sUrl").value.trim(),k=$("#sKey").value.trim();if(!okUrl(u)||k.length<8){$("#sOut").innerHTML=`<div class="note err">Check the URL (must end in /exec) and the key.</div>`;return}const c=adminCode(u,k);$("#sOut").innerHTML=`<label>Your admin code</label><textarea readonly rows="3" style="width:100%;font-family:monospace;font-size:12px">${esc(c)}</textarea><div class="row" style="margin-top:8px"><button class="btn p" id="sUse">Connect with it now</button></div>`;$("#sUse").onclick=()=>{$("#gAdminCode").value=c;document.querySelector('.tabs button[data-g="admin"]').click();show("gate")}};
+function renderSettings(){const b=$("#sConn");if(!cfg){b.innerHTML=`<h3>Connection</h3><p style="color:var(--mute);font-size:13px">Not connected. Use the Connect screen.</p>`;return}
+  b.innerHTML=`<h3>Connection</h3><div style="font-size:13px;line-height:1.7">Connected as <b>${esc(cfg.name)}</b> (${cfg.adminKey?"admin":"member"})<br>Server: <code class="k">…${esc(cfg.u.slice(-14))}</code><br>Device: ${esc(device())}</div><div class="row" style="margin-top:10px;flex-wrap:wrap">${cfg.adminKey?`<button class="btn" id="sCopyA">Copy admin code</button>`:""}<button class="btn" id="sCopyJ">Copy join link</button><button class="btn" id="sOut2" style="color:#b00">Disconnect this device</button></div>`;
+  if(cfg.adminKey)$("#sCopyA").onclick=()=>copy(adminCode(cfg.u,cfg.adminKey),"Admin code copied — keep it private");$("#sCopyJ").onclick=()=>copy(joinLink(cfg.u),"Join link copied");$("#sOut2").onclick=()=>disconnect("Disconnected. Your access code still works on this device if you join again.")}
+async function copy(t,m){try{await navigator.clipboard.writeText(t);toast(m||"Copied")}catch{window.prompt("Copy this:",t)}}
+
+/* render */
+const members=()=>S.members||[];const memberName=id=>id==="admin"?"Admin":((members().find(m=>m.id===id)||{}).name||"");
+function filtered(){const te=$("#fTeam").value,st=$("#fStatus").value,mine=$("#fMine").checked;return Object.values(S.tasks).filter(t=>(!te||t.team===te)&&(!st||t.status===st)&&(!mine||(me&&t.owner===me.id)))}
+function render(){if(!$("#v-timeline").hidden)renderTL();if(!$("#v-board").hidden)renderBoard();if(!$("#v-activity").hidden)renderAct();if(!$("#v-people").hidden)renderPeople();if(!$("#v-admin").hidden)renderAdmin();if(!$("#v-settings").hidden)renderSettings()}
+function renderTL(){const tl=$("#tl");tl.style.width=(40+304*PXD+160)+"px";let html=`<div class="axis"></div>`;MONTHS.forEach((m,i)=>html+=`<div class="month" style="left:${dayX(`2027-${String(i+1).padStart(2,"0")}-01`)}px">${m} 2027</div>`);
+  const now=new Date();if(now.getUTCFullYear()===2027&&now.getUTCMonth()<10)html+=`<div class="today" style="left:${dayX(now.toISOString().slice(0,10))}px"></div>`;
+  const list=filtered().filter(t=>t.date).sort((a,b)=>a.date.localeCompare(b.date)||a.title.localeCompare(b.title));const lanes={a:[],b:[]},mid=310,LH=78;
+  list.forEach((t,i)=>{const x=dayX(t.date)-65,side=i%2?"b":"a",L=lanes[side];let k=L.findIndex(e=>e<=x);if(k<0){k=L.length;L.push(0)}L[k]=x+138;const y=side==="a"?mid-26-(k+1)*LH:mid+28+k*LH;const lnTop=side==="a"?y+LH-26:mid+1,lnH=side==="a"?mid-(y+LH-26):y-mid-1;
+    html+=`<div class="tk ${t.status}" style="left:${x}px;top:${y}px;background:${COL[t.team]||"#eee"}" data-id="${esc(t.id)}">${esc(t.title)}<small>${fmtD(t.date)}${t.ownerName?" · "+esc(t.ownerName):""}</small></div><div class="ln" style="left:${x+65}px;top:${lnTop}px;height:${Math.max(0,lnH)}px"></div>`});
+  if(!list.length)html+=`<div class="empty" style="position:absolute;left:40px;top:40px">No tasks yet.${me&&me.role==="admin"?" Load the 2026 template from the Admin tab, or add one with “+ Task”.":""}</div>`;
+  tl.innerHTML=html;tl.querySelectorAll(".tk").forEach(el=>el.onclick=()=>openTask(el.dataset.id))}
+function renderBoard(){const b=$("#board");b.innerHTML=Object.keys(TEAMS).map(k=>{const ts=filtered().filter(t=>t.team===k).sort((a,b)=>(a.date||"").localeCompare(b.date||""));const done=ts.filter(t=>t.status==="done").length;
+  return `<div class="col"><h3 style="background:${COL[k]}">${TEAMS[k]}<small>${done}/${ts.length} done</small></h3>${ts.map(t=>`<div class="card" data-id="${esc(t.id)}"><div>${esc(t.title)}</div><div class="d"><span>${fmtD(t.date)}${t.ownerName?" · "+esc(t.ownerName):""}</span><span class="chip ${t.status}">${({todo:"to do",doing:"doing",done:"done"})[t.status]}</span></div></div>`).join("")}</div>`}).join("");
+  b.querySelectorAll(".card").forEach(el=>el.onclick=()=>openTask(el.dataset.id))}
+function renderAct(){const who=$("#aWho"),cur0=who.value;const ids=[...new Map(S.activity.map(a=>[a.byId,a.by])).entries()];who.innerHTML=`<option value="">Everyone</option>`+ids.map(([id,n])=>`<option value="${esc(id)}">${esc(n)}</option>`).join("");who.value=cur0;
+  const q=$("#aQ").value.toLowerCase();const list=S.activity.slice().reverse().filter(a=>(!cur0||a.byId===cur0)&&(!q||(a.by+" "+a.text+" "+a.taskTitle+" "+a.label).toLowerCase().includes(q)));
+  $("#act").innerHTML=list.length?list.map(x=>`<div><time>${fmtT(x.ts)}</time><span class="av">${ini(x.by)}</span><span><b>${esc(x.by)}</b>${x.label&&me&&me.role==="admin"?` <span class="chip">${esc(x.label)}</span>`:""} ${esc(x.text)}${x.taskTitle?` — <a href="#" data-id="${esc(x.taskId)}">${esc(x.taskTitle)}</a>`:""}</span></div>`).join(""):`<div class="empty">No activity yet.</div>`;
+  $("#act").querySelectorAll("a[data-id]").forEach(el=>el.onclick=e=>{e.preventDefault();if(S.tasks[el.dataset.id])openTask(el.dataset.id)})}
+function renderPeople(){const P={};const add=(id,name)=>{if(!P[id])P[id]={name,own:0,done:0,upd:0,last:0,m:null}};members().forEach(m=>{add(m.id,m.name);P[m.id].m=m;P[m.id].last=m.lastSeen||0});
+  Object.values(S.tasks).forEach(t=>{if(t.owner){add(t.owner,t.ownerName||memberName(t.owner));P[t.owner].own++;if(t.status==="done")P[t.owner].done++}});
+  S.activity.forEach(a=>{add(a.byId,a.by);P[a.byId].upd++;P[a.byId].last=Math.max(P[a.byId].last,a.ts)});
+  const ids=Object.keys(P).sort((x,y)=>(P[y].upd+P[y].own)-(P[x].upd+P[x].own));
+  $("#people").innerHTML=ids.length?ids.map(id=>{const p=P[id],pct=p.own?Math.round(100*p.done/p.own):0;return `<div class="pc"><span class="av">${ini(p.name)}</span><div class="n">${esc(p.name)}${me&&id===me.id?" (you)":""}${p.m&&p.m.label?` <span class="chip">${esc(p.m.label)}</span>`:""}</div><div class="s">${p.own} tasks owned · ${p.done} done · ${p.upd} changes${p.last?" · last seen "+fmtT(p.last):""}${p.m&&p.m.device?"<br>"+esc(p.m.device):""}</div><div class="bar"><i style="width:${pct}%"></i></div></div>`}).join(""):`<div class="empty">Nobody has joined yet.</div>`}
+
+/* admin */
+function renderAdmin(){if(!cfg||!cfg.adminKey)return;const codes=S.codes||{};const rows=Object.entries(codes).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+  $("#cTable").innerHTML=`<tr><th>Person</th><th>Code</th><th>Redeemed by</th><th>Changes</th><th></th></tr>`+(rows.length?rows.map(([code,c])=>{const n=S.activity.filter(a=>a.code===code).length;
+    return `<tr><td><b>${esc(c.label)}</b><br><span style="color:var(--mute);font-size:11px">created ${fmtT(c.createdAt)}</span></td><td><code class="k">${code}</code> ${c.revoked?'<span class="chip rev">revoked</span>':""}</td><td>${c.uses.length?c.uses.map(u=>`${esc(u.name)} <span style="color:var(--mute);font-size:11px">· ${esc(u.device)} · ${fmtT(u.at)}</span>`).join("<br>"):'<span style="color:var(--mute)">not used yet</span>'}</td><td><a href="#" data-act="${esc(code)}">${n}</a></td><td style="white-space:nowrap"><button class="btn s" data-copy="${code}">Copy</button> <button class="btn s" data-ren="${code}">Rename</button> <button class="btn s" data-rev="${code}" ${c.revoked?'data-on="1"':""}>${c.revoked?"Restore":"Revoke"}</button></td></tr>`}).join(""):`<tr><td colspan="5" class="empty">No codes yet.</td></tr>`);
+  $("#cTable").querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copy(`Join the TEDxNTU 2027 plan:\n${joinLink(cfg.u)}\nYour access code: ${b.dataset.copy}`,"Invite copied"));
+  $("#cTable").querySelectorAll("[data-ren]").forEach(b=>b.onclick=async()=>{const l=window.prompt("Name for this code:",codes[b.dataset.ren].label);if(l==null)return;try{applyState(await api({action:"renameCode",code:b.dataset.ren,label:l}))}catch(e){toast(e.message)}});
+  $("#cTable").querySelectorAll("[data-rev]").forEach(b=>b.onclick=async()=>{const on=!!b.dataset.on;if(!on&&!window.confirm("Revoke this code? The person loses access on all their devices."))return;try{applyState(await api({action:"revokeCode",code:b.dataset.rev,revoked:!on}))}catch(e){toast(e.message)}});
+  $("#cTable").querySelectorAll("[data-act]").forEach(a=>a.onclick=e=>{e.preventDefault();const c=codes[a.dataset.act];show("activity");const u=c.uses[0];if(u)$("#aWho").value=u.id;render()})}
+$("#cMake").onclick=async()=>{const label=$("#cLabel").value.trim();if(!label){toast("Type the person's name first");return}$("#cMake").disabled=true;try{const j=await api({action:"createCode",label});applyState(j);$("#cLabel").value="";$("#cNew").innerHTML=`<div class="note">Code for <b>${esc(label)}</b>: <code class="k" style="font-size:16px">${j.code}</code> &nbsp;<button class="btn s" id="cNewCopy">Copy invite</button></div>`;$("#cNewCopy").onclick=()=>copy(`Join the TEDxNTU 2027 plan:\n${joinLink(cfg.u)}\nYour access code: ${j.code}`,"Invite copied")}catch(e){toast(e.message)}finally{$("#cMake").disabled=false}};
+$("#cLinkCopy").onclick=()=>copy(joinLink(cfg.u),"Join link copied");
+const SEED=[[1,25,"spk","Call out for speaker nominations - IG"],[2,5,"hr","Recruitment for NTUWOW"],[2,24,"spk","Begin Speaker Reachout"],[3,12,"chair","Board meeting: appoint Chair & Co-chair"],[3,15,"spk","Finalize the theme"],[3,22,"chair","Team bonding"],[3,26,"part","Initiate Partnership Reachout"],[4,3,"chair","Board meeting: theme confirmation"],[4,5,"trs","Finalize the budget"],[4,8,"com","Start making plans for the performers"],[4,12,"chair","Apply for TEDx licence"],[4,22,"com","Design vendor update"],[5,5,"com","Performers videos"],[5,10,"com","Pre-event dinner email"],[5,12,"com","Confirm performers"],[5,18,"com","Confirm performers' requirements"],[5,27,"spk","End of Speaker Reachout"],[6,7,"com","Eventbrite & EDM write-up"],[6,9,"com","Emcee selection & script"],[6,13,"mkt","Design deliverables"],[6,16,"com","End of performers reach-out"],[6,18,"chair","Event flow draft 1"],[6,20,"hr","Registration meeting #1"],[6,23,"mkt","Physical marketing elements"],[7,1,"mkt","Teaser video"],[7,3,"chair","Board meeting: speakers"],[7,5,"mkt","Coming soon poster - IG"],[7,6,"hr","Volunteer recruitment call opens"],[7,8,"mkt","Freshers promotions @ North Spine"],[7,11,"com","Thank-you & appreciation emails"],[7,12,"part","End of Partnership Reachout"],[7,13,"hr","Final recruitment"],[7,14,"mkt","Countdown posters - IG"],[7,16,"hr","Eventbrite portal + IG"],[7,17,"mkt","Speaker poster - IG"],[7,18,"ops","T-shirt ordering"],[7,20,"hr","Registrations live"],[7,25,"ops","Food arrangement"],[7,28,"ops","Requesting items for the event"],[7,31,"hr","Reg. reminder 1"],[8,6,"chair","Event flow draft 2"],[8,10,"hr","Reg. reminder 2"],[8,20,"trs","End of reimbursement round 1"],[9,1,"spk","Video interviews end"],[9,5,"spk","Rehearsal 1"],[9,10,"spk","Rehearsal 2"],[9,15,"spk","Rehearsal 3"],[9,18,"ops","Event Eve: venue set-up"],[9,19,"ops","EVENT DAY"],[9,20,"ops","Event day operations"],[9,21,"ops","Clean up"],[10,5,"chair","Debrief & handover"]];
+$("#seedBtn").onclick=async()=>{if(Object.keys(S.tasks).length&&!window.confirm("Tasks already exist. Add the template anyway?"))return;$("#seedBtn").disabled=true;const ops=SEED.map((s,i)=>({type:"set",task:{id:"seed"+String(i).padStart(2,"0"),title:s[3],team:s[2],date:`2027-${String(s[0]).padStart(2,"0")}-${String(s[1]).padStart(2,"0")}`,status:"todo",owner:"",ownerName:"",notes:""}}));await push(ops.slice(0,52));$("#seedBtn").disabled=false;toast("Template loaded")};
+
+/* drawer */
+function openTask(id){cur=id;const t=S.tasks[id];if(!t)return;fillDrawer(t);$("#ov").classList.add("on");$("#dr").classList.add("on")}
+function closeD(){cur=null;$("#ov").classList.remove("on");$("#dr").classList.remove("on")}
+$("#ov").onclick=closeD;$("#dClose").onclick=closeD;
+function fillDrawer(t){$("#dTitle").textContent=t.id==="new"?"New task":"Task";$("#dMeta").textContent=t.updatedAt?`Last edited ${fmtT(t.updatedAt)} by ${t.updatedBy}`:"";
+  $("#dT").value=t.title||"";$("#dTeam").value=t.team||"chair";$("#dDate").value=t.date||"";ownerSel=t.owner||"";$("#dOwner").value=t.ownerName||memberName(ownerSel);$("#dNotes").value=t.notes||"";
+  document.querySelectorAll(".st button").forEach(b=>b.classList.toggle("on",b.dataset.s===(t.status||"todo")));$("#dDel").style.visibility=t.id==="new"?"hidden":"visible";$("#dPost").disabled=t.id==="new";
+  $("#dLog").innerHTML=(t.log||[]).slice().reverse().map(l=>`<div><time>${fmtT(l.ts)} · ${esc(l.by)}</time>${esc(l.text)}</div>`).join("")}
+$("#newBtn").onclick=()=>{cur="new";fillDrawer({id:"new",team:$("#fTeam").value||"chair",status:"todo"});$("#ov").classList.add("on");$("#dr").classList.add("on");$("#dT").focus()};
+document.querySelectorAll(".st button").forEach(b=>b.onclick=()=>document.querySelectorAll(".st button").forEach(x=>x.classList.toggle("on",x===b)));
+$("#dMe").onclick=()=>{ownerSel=me.id;$("#dOwner").value=me.name};$("#dNone").onclick=()=>{ownerSel="";$("#dOwner").value=""};
+$("#dOwner").onfocus=()=>pickList("");$("#dOwner").oninput=()=>pickList($("#dOwner").value);
+document.addEventListener("click",e=>{if(!e.target.closest(".pick"))$("#dOwnerList").classList.remove("on")});
+function pickList(q){const ul=$("#dOwnerList");const all=[{id:"admin",name:"Admin"}].concat(members()).filter(m=>!q||m.name.toLowerCase().includes(q.toLowerCase()));ul.innerHTML="";all.forEach(m=>{const li=document.createElement("li");li.textContent=m.name+(m.label?" · "+m.label:"");li.onclick=()=>{ownerSel=m.id;$("#dOwner").value=m.name;ul.classList.remove("on")};ul.appendChild(li)});ul.classList.toggle("on",all.length>0)}
+$("#dSave").onclick=async()=>{const title=$("#dT").value.trim();if(!title)return;const t=cur==="new"?{}:S.tasks[cur];const task={id:cur==="new"?undefined:cur,title,team:$("#dTeam").value,date:$("#dDate").value||"",owner:ownerSel,ownerName:ownerSel?($("#dOwner").value||memberName(ownerSel)):"",status:document.querySelector(".st button.on").dataset.s,notes:$("#dNotes").value};
+  if(await push([{type:"set",task}])){if(cur==="new")closeD();toast("Saved")}};
+$("#dPost").onclick=async()=>{const text=$("#dUpd").value.trim();if(!text||cur==="new")return;if(await push([{type:"update",id:cur,text}]))$("#dUpd").value=""};
+$("#dDel").onclick=async()=>{if(cur==="new")return;if(!$("#dDel").dataset.sure){$("#dDel").dataset.sure=1;$("#dDel").textContent="Really delete?";setTimeout(()=>{delete $("#dDel").dataset.sure;$("#dDel").textContent="Delete"},3000);return}delete $("#dDel").dataset.sure;$("#dDel").textContent="Delete";if(await push([{type:"delete",id:cur}]))closeD()};
+
+/* boot */
+(function(){loadCfg();let h="";try{h=decodeURIComponent(location.hash||"")}catch{}const p=parseAny(h);if(p&&p.kind==="J"&&!cfg){$("#gLink").value=joinCode(p.u);history.replaceState(null,"",location.pathname)}
+  if(cfg){me={id:cfg.adminKey?"admin":"",name:cfg.name,role:cfg.adminKey?"admin":"member"};$("#meTxt").textContent=cfg.name;connected();pull(true)}else show("gate")})();
+</script>
+</body>
+</html>
