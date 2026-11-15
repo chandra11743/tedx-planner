@@ -11,7 +11,7 @@ A shared planning app for the TEDxNTU 2027 committee (event day: **19 September 
 
 - The **admin** (you) has an **admin code** (`TEDX1-A-…`). Keep it private.
 - In the **Admin** tab you **generate one access code per person** and name it after them (e.g. `Nandini – Speaker Curation`). Each code is 6 characters like `7KQ2M9`.
-- You send each person the **join link** + their code. They open the link, type the code and their name, and they're in.
+- You send each person the app link + their code. They open the app and type **only the code** — they appear under the name you gave the code (they can optionally type their own).
 - The admin panel shows, for every code: who redeemed it, from which device, when, and how many changes they've made. One click filters the Activity feed to that person. You can **rename**, **revoke** or **restore** a code at any time; revoking logs them out everywhere.
 - Every edit (create, assign, status change, date move, note, update, delete) is stamped with the person's name and their access code, in the task's own history and in the global **Activity** feed.
 
@@ -32,7 +32,7 @@ Open the app → **⚙** → paste the Web app URL and the admin key → **Build
 ## Everyday use
 - **Timeline** — Jan–Oct 2027 axis, cards coloured by team, filter by team/status/"mine".
 - **Teams** — eight columns with done counts.
-- **Activity** — live feed; filter by person or search.
+- **Activity** — live feed of TEDx work only (task changes and updates); filter by person or search. Access events (codes created, joins, revokes) are in **Admin → Access log**, visible only to the admin.
 - **People** — per person: tasks owned, done, changes made, last seen, device.
 - Click a task to assign an owner, change status/date, add notes, or **post an update**.
 - Syncs every 5 seconds while open, and immediately after every change.

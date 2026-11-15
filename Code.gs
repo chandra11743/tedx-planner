@@ -35,7 +35,7 @@ function handle(b, S) {
   else if (b.token && S.members[b.token]) {
     const m = S.members[b.token], c = S.codes[m.code];
     if (!c || c.revoked || m.removed) return { save: false, body: () => ({ ok: false, error: 'access revoked', revoked: true }) };
-    m.lastSeen = now; actor = { id: m.id, name: m.name, role: 'member', code: m.code, label: c.label };
+    m.lastSeen = now; actor = { id: m.id, name: m.name || c.label, role: 'member', code: m.code, label: c.label };
   }
   const act = b.action || 'pull';
 
@@ -43,12 +43,13 @@ function handle(b, S) {
     const code = String(b.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     const c = S.codes[code];
     if (!c || c.revoked) throw new Error('That access code is not valid');
-    const name = clean(b.name, 40); if (!name) throw new Error('Please enter your name');
+    const name = clean(b.name, 40);                    // optional: falls back to the name the admin gave the code
     const token = rand(32), id = 'm' + rand(8);
     S.members[token] = { id, name, code, device: clean(b.device, 80), joinedAt: now, lastSeen: now };
-    c.uses.push({ id, name, device: clean(b.device, 80), at: now });
-    log(S, { id, name, code, label: c.label }, null, 'joined with access code "' + c.label + '"');
-    return { save: true, body: (S) => ({ ok: true, token, member: { id, name, role: 'member', label: c.label }, state: view(S, 'member') }) };
+    const shown = name || c.label;
+    c.uses.push({ id, name: shown, device: clean(b.device, 80), at: now });
+    log(S, { id, name: shown, code, label: c.label }, null, 'joined with access code "' + c.label + '"');
+    return { save: true, body: (S) => ({ ok: true, token, member: { id, name: shown, role: 'member', label: c.label }, state: view(S, 'member') }) };
   }
   if (!actor) return { save: false, body: () => ({ ok: false, error: 'not connected', auth: true }) };
 
@@ -103,7 +104,7 @@ function log(S, actor, task, text) {
   if (S.activity.length > MAX_ACTIVITY) S.activity = S.activity.slice(-MAX_ACTIVITY);
 }
 function view(S, role) {
-  const members = []; for (const t in S.members) { const m = S.members[t]; if (!m.removed) members.push({ id: m.id, name: m.name, code: role === 'admin' ? m.code : '', label: (S.codes[m.code] || {}).label || '', joinedAt: m.joinedAt, lastSeen: m.lastSeen, device: role === 'admin' ? m.device : '' }); }
+  const members = []; for (const t in S.members) { const m = S.members[t]; if (!m.removed) members.push({ id: m.id, name: m.name || (S.codes[m.code] || {}).label || 'Member', code: role === 'admin' ? m.code : '', label: (S.codes[m.code] || {}).label || '', joinedAt: m.joinedAt, lastSeen: m.lastSeen, device: role === 'admin' ? m.device : '' }); }
   const v = { rev: S.rev, tasks: S.tasks, activity: S.activity.slice(-600), members };
   if (role === 'admin') v.codes = S.codes;
   return v;
