@@ -24,7 +24,7 @@ main{padding:16px 18px;max-width:1600px;margin:0 auto}
 select,input,textarea{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--mute)}.legend span{display:inline-flex;align-items:center;gap:5px}.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
 .tl-wrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 0}
-.tl{position:relative;height:620px}.axis{position:absolute;left:0;right:0;top:50%;height:2px;background:#333}
+.tl{position:relative;height:620px}.tk{height:76px;overflow:hidden}.axis{position:absolute;left:0;right:0;top:50%;height:2px;background:#333}
 .month{position:absolute;top:50%;margin-top:8px;font-weight:700;font-size:13px;border-left:2px solid #333;padding-left:6px;height:16px}
 .today{position:absolute;top:0;bottom:0;width:2px;background:var(--red);opacity:.6}
 .tk{position:absolute;width:130px;padding:6px 8px;border-radius:8px;font-size:11.5px;line-height:1.3;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.06)}
@@ -217,8 +217,15 @@ function filtered(){const te=$("#fTeam").value,st=$("#fStatus").value,mine=$("#f
 function render(){if(!$("#v-timeline").hidden)renderTL();if(!$("#v-board").hidden)renderBoard();if(!$("#v-activity").hidden)renderAct();if(!$("#v-people").hidden)renderPeople();if(!$("#v-admin").hidden)renderAdmin();if(!$("#v-settings").hidden)renderSettings()}
 function renderTL(){const tl=$("#tl");tl.style.width=(40+304*PXD+160)+"px";let html=`<div class="axis"></div>`;MONTHS.forEach((m,i)=>html+=`<div class="month" style="left:${dayX(`2027-${String(i+1).padStart(2,"0")}-01`)}px">${m} 2027</div>`);
   const now=new Date();if(now.getUTCFullYear()===2027&&now.getUTCMonth()<10)html+=`<div class="today" style="left:${dayX(now.toISOString().slice(0,10))}px"></div>`;
-  const list=filtered().filter(t=>t.date).sort((a,b)=>a.date.localeCompare(b.date)||a.title.localeCompare(b.title));const lanes={a:[],b:[]},mid=310,LH=78;
-  list.forEach((t,i)=>{const x=dayX(t.date)-65,side=i%2?"b":"a",L=lanes[side];let k=L.findIndex(e=>e<=x);if(k<0){k=L.length;L.push(0)}L[k]=x+138;const y=side==="a"?mid-26-(k+1)*LH:mid+28+k*LH;const lnTop=side==="a"?y+LH-26:mid+1,lnH=side==="a"?mid-(y+LH-26):y-mid-1;
+  const list=filtered().filter(t=>t.date).sort((a,b)=>a.date.localeCompare(b.date)||a.title.localeCompare(b.title));
+  /* pass 1: put each card in a lane above (a) or below (b) the axis so none overlap */
+  const lanes={a:[],b:[]};const placed=list.map((t,i)=>{const x=dayX(t.date)-65,side=i%2?"b":"a",L=lanes[side];let k=L.findIndex(e=>e<=x);if(k<0){k=L.length;L.push(0)}L[k]=x+138;return{t,x,side,k}});
+  /* pass 2: fill the screen height — grow the timeline to the window, spread lanes evenly, scroll only if it truly can't fit */
+  const wrap=$(".tl-wrap"),top=wrap.getBoundingClientRect().top+window.scrollY,avail=Math.max(420,window.innerHeight-top-24-32);
+  const CH=76,GAP=12,EDGE=34,nA=Math.max(1,lanes.a.length),nB=Math.max(1,lanes.b.length),need=2*(EDGE+Math.max(nA,nB)*(CH+GAP))+20;
+  const H=Math.max(avail,need),mid=Math.round(H/2);tl.style.height=H+"px";
+  const step=side=>Math.min(170,Math.max(CH+GAP,(mid-EDGE-10)/(side==="a"?nA:nB)));const sA=step("a"),sB=step("b");
+  placed.forEach(({t,x,side,k})=>{const y=side==="a"?Math.round(mid-EDGE-CH-k*sA):Math.round(mid+EDGE+k*sB);const lnTop=side==="a"?y+CH:mid+1,lnH=side==="a"?mid-(y+CH):y-mid-1;
     html+=`<div class="tk ${t.status}" style="left:${x}px;top:${y}px;background:${COL[t.team]||"#eee"}" data-id="${esc(t.id)}">${esc(t.title)}<small>${fmtD(t.date)}${t.ownerName?" · "+esc(t.ownerName):""}</small></div><div class="ln" style="left:${x+65}px;top:${lnTop}px;height:${Math.max(0,lnH)}px"></div>`});
   if(!list.length)html+=`<div class="empty" style="position:absolute;left:40px;top:40px">No tasks yet.${me&&me.role==="admin"?" Load the 2026 template from the Admin tab, or add one with “+ Task”.":""}</div>`;
   tl.innerHTML=html;tl.querySelectorAll(".tk").forEach(el=>el.onclick=()=>openTask(el.dataset.id))}
@@ -267,6 +274,7 @@ $("#dSave").onclick=async()=>{const title=$("#dT").value.trim();if(!title)return
 $("#dPost").onclick=async()=>{const text=$("#dUpd").value.trim();if(!text||cur==="new")return;if(await push([{type:"update",id:cur,text}]))$("#dUpd").value=""};
 $("#dDel").onclick=async()=>{if(cur==="new")return;if(!$("#dDel").dataset.sure){$("#dDel").dataset.sure=1;$("#dDel").textContent="Really delete?";setTimeout(()=>{delete $("#dDel").dataset.sure;$("#dDel").textContent="Delete"},3000);return}delete $("#dDel").dataset.sure;$("#dDel").textContent="Delete";if(await push([{type:"delete",id:cur}]))closeD()};
 
+window.addEventListener("resize",()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>{if(!$("#v-timeline").hidden)renderTL()},150)});
 /* boot */
 (function(){loadCfg();let h="";try{h=decodeURIComponent(location.hash||"")}catch{}const p=parseAny(h);if(p&&p.kind==="J"&&!cfg){$("#gLink").value=joinCode(p.u);history.replaceState(null,"",location.pathname)}
   if(cfg){me={id:cfg.adminKey?"admin":"",name:cfg.name,role:cfg.adminKey?"admin":"member"};$("#meTxt").textContent=cfg.name;connected();pull(true)}else show("gate")})();
