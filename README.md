@@ -10,10 +10,16 @@ A shared planning app for the TEDxNTU 2027 committee (event day: **19 September 
 ## How access works
 
 - The **admin** (you) has an **admin code** (`TEDX1-A-…`). Keep it private.
-- In the **Admin** tab you **generate one access code per person** and name it after them (e.g. `Nandini – Speaker Curation`). Each code is 6 characters like `7KQ2M9`.
+- In the **Admin** tab you **generate one access code per person** and give it a **team** and **position** and name it after them (e.g. `Nandini – Speaker Curation`). Each code is 6 characters like `7KQ2M9`.
 - You send each person the app link + their code. They open the app and type **only the code** — they appear under the name you gave the code (they can optionally type their own).
 - The admin panel shows, for every code: who redeemed it, from which device, when, and how many changes they've made. One click filters the Activity feed to that person. You can **rename**, **revoke** or **restore** a code at any time; revoking logs them out everywhere.
 - Every edit (create, assign, status change, date move, note, update, delete) is stamped with the person's name and their access code, in the task's own history and in the global **Activity** feed.
+
+## Who can edit what
+
+- Each person can **add, edit, change the status of, post updates on and delete** tasks of **their own team** only. Other teams' tasks are view-only for them.
+- **Chair & Co-chair** (team *Chair & Co-chair*, or position *Chair* / *Co-Chair*) can do all of that for **every** team. So can the admin.
+- The rule is enforced by the backend, not just hidden in the app. You can change someone's team or position any time from the Admin table; it applies on their next sync.
 
 ## Setup (admin, ~5 minutes)
 

@@ -3,6 +3,12 @@
  *  Deploy as a Web App: Execute as "Me", Who has access "Anyone". Run setup() once to get the admin key.
  */
 const FOLDER_NAME = 'TEDxNTU Planner', FILE_NAME = 'planner-data.json', MAX_ACTIVITY = 3000;
+const TEAMS = ['chair', 'spk', 'hr', 'part', 'mkt', 'trs', 'com', 'ops'];
+const POSITIONS = ['Chair', 'Co-Chair', 'Director', 'Deputy Director', 'Member'];
+/* Chair & Co-chair (by team or by position) can edit every team's tasks; everyone else only their own team's. */
+function isFull(c) { return !!c && (c.team === 'chair' || c.position === 'Chair' || c.position === 'Co-Chair'); }
+function canTouch(actor, team) { return actor.full || (!!actor.team && actor.team === team); }
+const TEAM_NAMES = { chair: 'Chair & Co-chair', spk: 'Speaker Curation', hr: 'HR & Registrations', part: 'Partnerships', mkt: 'Marketing', trs: 'Treasury', com: 'Communications', ops: 'Operations' };
 
 function setup() {
   const p = PropertiesService.getScriptProperties();
@@ -31,11 +37,11 @@ function handle(b, S) {
   if (!adminKey) throw new Error('Run setup() in the Apps Script editor first');
   const now = Date.now();
   let actor = null;
-  if (b.adminKey && b.adminKey === adminKey) actor = { id: 'admin', name: clean(b.name, 40) || 'Admin', role: 'admin', code: '', label: 'Admin' };
+  if (b.adminKey && b.adminKey === adminKey) actor = { id: 'admin', name: clean(b.name, 40) || 'Admin', role: 'admin', code: '', label: 'Admin', team: 'chair', position: 'Admin', full: true };
   else if (b.token && S.members[b.token]) {
     const m = S.members[b.token], c = S.codes[m.code];
     if (!c || c.revoked || m.removed) return { save: false, body: () => ({ ok: false, error: 'access revoked', revoked: true }) };
-    m.lastSeen = now; actor = { id: m.id, name: m.name || c.label, role: 'member', code: m.code, label: c.label };
+    m.lastSeen = now; actor = { id: m.id, name: m.name || c.label, role: 'member', code: m.code, label: c.label, team: c.team || '', position: c.position || '', full: isFull(c) };
   }
   const act = b.action || 'pull';
 
@@ -49,7 +55,7 @@ function handle(b, S) {
     const shown = name || c.label;
     c.uses.push({ id, name: shown, device: clean(b.device, 80), at: now });
     log(S, { id, name: shown, code, label: c.label }, null, 'joined with access code "' + c.label + '"');
-    return { save: true, body: (S) => ({ ok: true, token, member: { id, name: shown, role: 'member', label: c.label }, state: view(S, 'member') }) };
+    return { save: true, body: (S) => ({ ok: true, token, member: { id, name: shown, role: 'member', label: c.label, team: c.team || '', position: c.position || '', full: isFull(c) }, state: view(S, 'member') }) };
   }
   if (!actor) return { save: false, body: () => ({ ok: false, error: 'not connected', auth: true }) };
 
@@ -60,15 +66,36 @@ function handle(b, S) {
     return { save, body: (S) => ({ ok: true, me: actor, state: view(S, actor.role) }) };
   }
   if (act === 'push') {
-    (b.ops || []).slice(0, 100).forEach(op => applyOp(S, actor, op, now));
+    const ops = (b.ops || []).slice(0, 100);
+    if (!actor.full) {                                   // check everything first so a refused batch changes nothing
+      if (!actor.team) throw new Error('No team is assigned to your access code yet. Ask the admin.');
+      ops.forEach(op => {
+        const id = op.type === 'set' ? (op.task || {}).id : op.id, old = id ? S.tasks[id] : null;
+        if (old && !canTouch(actor, old.team)) throw new Error('"' + old.title + '" belongs to ' + TEAM_NAMES[old.team] + '. You can only change ' + TEAM_NAMES[actor.team] + ' tasks.');
+        if (op.type === 'set' && !canTouch(actor, (op.task || {}).team)) throw new Error('You can only add or move tasks into ' + TEAM_NAMES[actor.team] + '.');
+      });
+    }
+    ops.forEach(op => applyOp(S, actor, op, now));
     return { save: true, body: (S) => ({ ok: true, me: actor, state: view(S, actor.role) }) };
   }
   if (actor.role !== 'admin') throw new Error('Only the admin can do that');
   if (act === 'createCode') {
     let code; do { code = rand(6, 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'); } while (S.codes[code]);
-    S.codes[code] = { label: clean(b.label, 60) || 'Unnamed', createdAt: now, revoked: false, uses: [] };
-    log(S, actor, null, 'created access code for "' + S.codes[code].label + '"');
+    const team = TEAMS.indexOf(b.team) >= 0 ? b.team : '', position = POSITIONS.indexOf(b.position) >= 0 ? b.position : 'Member';
+    if (!team) throw new Error('Choose a team for this code');
+    S.codes[code] = { label: clean(b.label, 60) || 'Unnamed', team, position, createdAt: now, revoked: false, uses: [] };
+    log(S, actor, null, 'created access code for "' + S.codes[code].label + '" (' + TEAM_NAMES[team] + ' · ' + position + ')');
     return { save: true, body: (S) => ({ ok: true, code, state: view(S, 'admin') }) };
+  }
+  if (act === 'updateCode') {
+    const c = S.codes[b.code]; if (!c) throw new Error('no such code');
+    const was = (TEAM_NAMES[c.team] || 'no team') + ' · ' + (c.position || '-');
+    if (b.label != null) c.label = clean(b.label, 60) || c.label;
+    if (b.team != null) { if (TEAMS.indexOf(b.team) < 0) throw new Error('unknown team'); c.team = b.team; }
+    if (b.position != null) { if (POSITIONS.indexOf(b.position) < 0) throw new Error('unknown position'); c.position = b.position; }
+    const now2 = TEAM_NAMES[c.team] + ' · ' + c.position;
+    if (now2 !== was) log(S, actor, null, 'changed "' + c.label + '" from ' + was + ' to ' + now2);
+    return { save: true, body: (S) => ({ ok: true, state: view(S, 'admin') }) };
   }
   if (act === 'renameCode') { const c = S.codes[b.code]; if (!c) throw new Error('no such code'); c.label = clean(b.label, 60) || c.label; return { save: true, body: (S) => ({ ok: true, state: view(S, 'admin') }) }; }
   if (act === 'revokeCode') { const c = S.codes[b.code]; if (!c) throw new Error('no such code'); c.revoked = !!b.revoked; log(S, actor, null, (c.revoked ? 'revoked' : 'restored') + ' access for "' + c.label + '"'); return { save: true, body: (S) => ({ ok: true, state: view(S, 'admin') }) }; }
@@ -77,7 +104,6 @@ function handle(b, S) {
 }
 
 function applyOp(S, actor, op, now) {
-  const TEAMS = ['chair', 'spk', 'hr', 'part', 'mkt', 'trs', 'com', 'ops'];
   if (op.type === 'set') {
     const t = op.task || {}; const id = String(t.id || ('t' + rand(8))).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24);
     const old = S.tasks[id];
@@ -104,7 +130,7 @@ function log(S, actor, task, text) {
   if (S.activity.length > MAX_ACTIVITY) S.activity = S.activity.slice(-MAX_ACTIVITY);
 }
 function view(S, role) {
-  const members = []; for (const t in S.members) { const m = S.members[t]; if (!m.removed) members.push({ id: m.id, name: m.name || (S.codes[m.code] || {}).label || 'Member', code: role === 'admin' ? m.code : '', label: (S.codes[m.code] || {}).label || '', joinedAt: m.joinedAt, lastSeen: m.lastSeen, device: role === 'admin' ? m.device : '' }); }
+  const members = []; for (const t in S.members) { const m = S.members[t]; if (m.removed) continue; const c = S.codes[m.code] || {}; members.push({ id: m.id, name: m.name || c.label || 'Member', code: role === 'admin' ? m.code : '', label: c.label || '', team: c.team || '', position: c.position || '', joinedAt: m.joinedAt, lastSeen: m.lastSeen, device: role === 'admin' ? m.device : '' }); }
   const v = { rev: S.rev, tasks: S.tasks, activity: S.activity.slice(-600), members };
   if (role === 'admin') v.codes = S.codes;
   return v;
