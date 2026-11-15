@@ -37,7 +37,8 @@ function handle(b, S) {
   if (!adminKey) throw new Error('Run setup() in the Apps Script editor first');
   const now = Date.now();
   let actor = null;
-  if (b.adminKey && b.adminKey === adminKey) actor = { id: 'admin', name: clean(b.name, 40) || 'Admin', role: 'admin', code: '', label: 'Admin', team: 'chair', position: 'Admin', full: true };
+  const A = S.admin = S.admin || { name: '', position: 'Co-Chair' };   // the admin's own profile (they sit on the committee too)
+  if (b.adminKey && b.adminKey === adminKey) actor = { id: 'admin', name: A.name || clean(b.name, 40) || 'Admin', role: 'admin', code: '', label: 'Admin', team: 'chair', position: A.position || 'Co-Chair', full: true };
   else if (b.token && S.members[b.token]) {
     const m = S.members[b.token], c = S.codes[m.code];
     if (!c || c.revoked || m.removed) return { save: false, body: () => ({ ok: false, error: 'access revoked', revoked: true }) };
@@ -87,6 +88,13 @@ function handle(b, S) {
     log(S, actor, null, 'created access code for "' + S.codes[code].label + '" (' + TEAM_NAMES[team] + ' · ' + position + ')');
     return { save: true, body: (S) => ({ ok: true, code, state: view(S, 'admin') }) };
   }
+  if (act === 'setAdminProfile') {
+    const name = clean(b.profileName, 40), position = ['Chair', 'Co-Chair'].indexOf(b.position) >= 0 ? b.position : A.position;
+    if (!name) throw new Error('Enter your name');
+    if (name !== A.name || position !== A.position) log(S, actor, null, 'set admin profile to ' + name + ' · ' + position);
+    A.name = name; A.position = position;
+    return { save: true, body: (S) => ({ ok: true, me: Object.assign({}, actor, { name, position }), state: view(S, 'admin') }) };
+  }
   if (act === 'updateCode') {
     const c = S.codes[b.code]; if (!c) throw new Error('no such code');
     const was = (TEAM_NAMES[c.team] || 'no team') + ' · ' + (c.position || '-');
@@ -131,6 +139,7 @@ function log(S, actor, task, text) {
 }
 function view(S, role) {
   const members = []; for (const t in S.members) { const m = S.members[t]; if (m.removed) continue; const c = S.codes[m.code] || {}; members.push({ id: m.id, name: m.name || c.label || 'Member', code: role === 'admin' ? m.code : '', label: c.label || '', team: c.team || '', position: c.position || '', joinedAt: m.joinedAt, lastSeen: m.lastSeen, device: role === 'admin' ? m.device : '' }); }
+  const A = S.admin || {}; members.unshift({ id: 'admin', name: A.name || 'Admin', code: '', label: 'Admin', team: 'chair', position: A.position || 'Co-Chair', joinedAt: 0, lastSeen: 0, device: '' });
   const v = { rev: S.rev, tasks: S.tasks, activity: S.activity.slice(-600), members };
   if (role === 'admin') v.codes = S.codes;
   return v;
