@@ -221,7 +221,7 @@ function renderTL(){const tl=$("#tl");tl.style.width=(40+304*PXD+160)+"px";let h
   /* pass 1: put each card in a lane above (a) or below (b) the axis so none overlap */
   const CW=120,lanes={a:[],b:[]};const placed=list.map(t=>{const x=dayX(t.date)-CW/2;let best=null;for(const side of ["a","b"]){const A=lanes[side];let k=A.findIndex(e=>e<=x);if(k<0)k=A.length;if(!best||k<best.k)best={side,k}}const A=lanes[best.side];if(best.k===A.length)A.push(0);A[best.k]=x+CW+8;return{t,x,side:best.side,k:best.k}});
   /* pass 2: fill the screen height — grow the timeline to the window, spread lanes evenly, scroll only if it truly can't fit */
-  const wrap=$(".tl-wrap"),top=wrap.getBoundingClientRect().top+window.scrollY,avail=Math.max(420,window.innerHeight-top-24-32);
+  const wrap=$(".tl-wrap"),top=wrap.getBoundingClientRect().top+window.scrollY,avail=Math.max(420,window.innerHeight-top-24-48);
   const CH=60,GAP=10,EDGE=34,nA=Math.max(1,lanes.a.length),nB=Math.max(1,lanes.b.length),need=2*(EDGE+Math.max(nA,nB)*(CH+GAP))+20;
   const H=Math.max(avail,need),mid=Math.round(H/2);tl.style.height=H+"px";
   const step=side=>Math.min(170,Math.max(CH+GAP,(mid-EDGE-10)/(side==="a"?nA:nB)));const sA=step("a"),sB=step("b");
